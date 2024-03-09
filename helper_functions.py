@@ -5,6 +5,9 @@ Created on Mon Mar  4 20:08:48 2024
 @author: romas
 """
 
+import pandas as pd
+
+
 def rle_to_pixels(rle_code, img_shape):
     ''' This function decodes Run Length Encoding into pixels '''
     
@@ -29,30 +32,11 @@ def apply_mask(image, mask, color = (255, 255, 0)):
     ''' This function saturates the Red and Green RGB colors in the image 
         where the coordinates match the mask'''
         
-    # print(mask)
-    
-    error_file = "error_pixels.txt"
-    
-    # file_size = os.path.getsize(error_file)
-    
     for x, y in mask:
         
-        try:
-        
-            image[x, y, [0, 1, 2]] = color
+        image[x, y, [0, 1, 2]] = color
             
-        except IndexError:
-            
-            print("Found error pixels")
-            
-            print(x, y)
-            
-            with open(error_file, "a") as f:
-                
-                f.write(f"{x}, {y} \n")
-                
-            break
-                
+       
     return image
 
 def group_encoded_pixels(rle_code):
@@ -62,3 +46,22 @@ def group_encoded_pixels(rle_code):
         return ' '.join(rle_code)
     
     return 0
+
+def aggregate_and_save_to_csv(file_name: str):
+    
+    
+    data = pd.read_csv(f"{file_name}.csv")
+    
+    data_1 = data.copy()
+    
+    data_1['Ship_exists'] = data_1['EncodedPixels'].notnull()
+    
+    data_1['EncodedPixels'] = data['EncodedPixels']
+    
+    
+    data_1 = data_1.groupby('ImageId').agg({'ImageId': 'first', 'Ship_exists': ['first', 'sum'], 
+                                            'EncodedPixels': lambda rle_code: group_encoded_pixels(rle_code)}) 
+    
+    data_1.columns = ['ImageId', 'Ship_exists', 'Number_of_ships', 'EncodedPixels_agg']
+    
+    data_1.to_csv('{file_name}_aggregated.csv', sep=',', encoding = 'utf_8')

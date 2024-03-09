@@ -52,6 +52,6 @@ def main_cnn(X_train, Y_train, kernel_size, pool_size, epochs = 10, batch_size =
 
     start = tm.perf_counter()
 
-    model.fit(X_train, Y_train, epochs = 1, batch_size = 5) # train the CNN
+    model.fit_generator() # train the CNN
     
     print(f"Time to train {round(tm.perf_counter() - start, 3)} seconds")
