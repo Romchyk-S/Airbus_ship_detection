@@ -7,6 +7,23 @@ Created on Mon Mar  4 20:08:48 2024
 
 import pandas as pd
 
+def read_or_aggregate_data(file_name: str):
+    
+    try:
+        
+        data = pd.read_csv(f"{file_name}_aggregated.csv")
+
+    except FileNotFoundError:
+        
+        data_type = file_name.split("_")[0]
+        
+        print(f"Aggregating and saving the data in a new csv for {data_type}ing.")
+        
+        aggregate_and_save_to_csv(file_name)
+        
+        data = pd.read_csv(f"{file_name}_aggregated.csv")
+        
+    return data
 
 def rle_to_pixels(rle_code, img_shape):
     ''' This function decodes Run Length Encoding into pixels '''
@@ -49,7 +66,6 @@ def group_encoded_pixels(rle_code):
 
 def aggregate_and_save_to_csv(file_name: str):
     
-    
     data = pd.read_csv(f"{file_name}.csv")
     
     data_1 = data.copy()
@@ -59,9 +75,9 @@ def aggregate_and_save_to_csv(file_name: str):
     data_1['EncodedPixels'] = data['EncodedPixels']
     
     
-    data_1 = data_1.groupby('ImageId').agg({'ImageId': 'first', 'Ship_exists': ['first', 'sum'], 
-                                            'EncodedPixels': lambda rle_code: group_encoded_pixels(rle_code)}) 
+    data_1 = data_1.groupby('ImageId').agg({'Ship_exists': ['first', 'sum'], 
+                                            'EncodedPixels': lambda rle_code: group_encoded_pixels(rle_code)}).reset_index()
     
     data_1.columns = ['ImageId', 'Ship_exists', 'Number_of_ships', 'EncodedPixels_agg']
     
-    data_1.to_csv('{file_name}_aggregated.csv', sep=',', encoding = 'utf_8')
+    data_1.to_csv(f'{file_name}_aggregated.csv', sep=',', encoding = 'utf_8')
